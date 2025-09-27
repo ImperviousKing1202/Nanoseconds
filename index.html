@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Nanosecond Countdown</title>
+  <style>
+    body {
+      background: white;
+      color: black;
+      font-family: sans-serif;
+      font-weight: bold;
+      text-align: center;
+      margin: 0;
+      padding: 2rem;
+    }
+    #countdown {
+      font-size: 2rem;
+      margin-top: 2rem;
+      word-wrap: break-word;
+    }
+    #controls {
+      margin-top: 2rem;
+    }
+    select, input, button {
+      font-size: 1rem;
+      padding: 0.5rem;
+      margin: 0.25rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Nanosecond Countdown</h1>
+  
+  <div id="countdown">Loading...</div>
+  
+  <div id="controls">
+    <input type="date" id="dateInput">
+    <input type="number" id="hourInput" min="1" max="12" value="12"> :
+    <input type="number" id="minuteInput" min="0" max="59" value="00">
+    <select id="ampmInput">
+      <option value="AM">AM</option>
+      <option value="PM">PM</option>
+    </select>
+    <button id="saveDate">Save Date</button>
+  </div>
+
+  <script>
+    const countdownEl = document.getElementById("countdown");
+    const dateInput = document.getElementById("dateInput");
+    const hourInput = document.getElementById("hourInput");
+    const minuteInput = document.getElementById("minuteInput");
+    const ampmInput = document.getElementById("ampmInput");
+    const saveBtn = document.getElementById("saveDate");
+
+    // Load saved date or default to now + 10s
+    let targetDate = localStorage.getItem("targetDate") 
+      ? new Date(localStorage.getItem("targetDate")) 
+      : new Date(Date.now() + 10000);
+
+    // Initialize inputs
+    function setInputsFromDate(date) {
+      dateInput.value = date.toISOString().slice(0, 10);
+      let hours = date.getHours();
+      let ampm = hours >= 12 ? "PM" : "AM";
+      hours = hours % 12 || 12;
+      hourInput.value = hours;
+      minuteInput.value = String(date.getMinutes()).padStart(2, "0");
+      ampmInput.value = ampm;
+    }
+    setInputsFromDate(targetDate);
+
+    saveBtn.addEventListener("click", () => {
+      let datePart = dateInput.value;
+      let hours = parseInt(hourInput.value, 10);
+      let minutes = parseInt(minuteInput.value, 10);
+      let ampm = ampmInput.value;
+
+      if (ampm === "PM" && hours < 12) hours += 12;
+      if (ampm === "AM" && hours === 12) hours = 0;
+
+      let newDate = new Date(datePart);
+      newDate.setHours(hours, minutes, 0, 0);
+
+      targetDate = newDate;
+      localStorage.setItem("targetDate", targetDate);
+    });
+
+    function updateCountdown() {
+      const now = new Date();
+      let diff = targetDate - now; // milliseconds
+      let ns = diff * 1e6; // nanoseconds
+
+      if (ns < 0) ns = Math.abs(ns); // keep counting up
+
+      countdownEl.textContent = Math.floor(ns).toString();
+    }
+
+    setInterval(updateCountdown, 1);
+    updateCountdown();
+  </script>
+</body>
+</html>
